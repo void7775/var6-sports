@@ -1,16 +1,33 @@
-# my_app
+# Var6 Sports App
 
-A new Flutter project.
+A Flutter sports application with Firebase backend featuring:
+
+- 🏆 Sports fixtures and results
+- 🔥 Firebase authentication and data storage  
+- 📱 Multi-platform support (iOS, Android, Web)
+- ⚙️ Automated CI/CD with GitHub Actions
+- 🎨 Modern UI with dark/light theme support
+
+## Features
+
+- **Sports Data**: Track fixtures, results, and team information
+- **Club Logos**: Comprehensive collection of sports club logos
+- **Firebase Integration**: Real-time data synchronization
+- **Internationalization**: Multi-language support
+- **Responsive Design**: Works on all screen sizes
+
+## Automated Builds
+
+This project uses GitHub Actions to automatically build:
+- 📱 **iOS apps** (using macOS runners)
+- 🤖 **Android APK/AAB files** 
+- 🌐 **Web applications**
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+1. Clone this repository
+2. Run `flutter pub get`
+3. Configure Firebase (see FIREBASE_SETUP.md)
+4. Run `flutter run`
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Built with ❤️ using Flutter and Firebase.
