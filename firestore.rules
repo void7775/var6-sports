@@ -1,0 +1,30 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId}/predictions/{document=**} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Public matches selected by admin for betting
+    match /matches/{matchId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null &&
+        request.auth.token.email == 'admin@gmail.com';
+    }
+
+    // Scraped fixtures storage
+    match /fixtures/{fixtureId} {
+      allow read: if request.auth != null;
+      allow create, update, delete: if request.auth != null &&
+        request.auth.token.email == 'admin@gmail.com';
+    }
+
+    // Admin meta like last scrape date
+    match /admin/{docId} {
+      allow read: if request.auth != null &&
+        request.auth.token.email == 'admin@gmail.com';
+      allow write: if request.auth != null &&
+        request.auth.token.email == 'admin@gmail.com';
+    }
+  }
+}
