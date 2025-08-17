@@ -1,6 +1,6 @@
 workflows:
-  ios-workflow:
-    name: iOS Build
+  ios-simulator-workflow:
+    name: iOS Simulator Build
     environment:
       flutter: 3.24.0
       xcode: latest
@@ -35,9 +35,13 @@ workflows:
       - name: Flutter build ios simulator
         script: |
           # Force simulator build to avoid -G compiler option issues
-          echo "Starting iOS simulator build..."
+          echo "=== STARTING iOS SIMULATOR BUILD ==="
+          echo "Current directory: $(pwd)"
+          echo "Flutter version: $(flutter --version)"
+          echo "Available devices: $(flutter devices)"
+          echo "Building for iOS simulator..."
           flutter build ios --debug --simulator --verbose
-          echo "Simulator build completed!"
+          echo "=== iOS SIMULATOR BUILD COMPLETED ==="
       - name: Verify build output
         script: |
           echo "Build completed successfully!"
