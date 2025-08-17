@@ -33,14 +33,20 @@ jobs:
           pod repo update
           pod install
 
-      - name: Build with Xcode for Simulator
+      - name: Xcode diagnostics
         run: |
-          set -e
+          xcodebuild -version
+          xcodebuild -showsdks
+          xcrun simctl list devices
+
+      - name: Build with Xcode for Simulator (generic destination)
+        run: |
+          set -euo pipefail
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination "platform=iOS Simulator,OS=latest,name=iPhone 15" \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
 
