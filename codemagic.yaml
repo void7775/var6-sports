@@ -1,59 +1,38 @@
 workflows:
-  ios-simulator-workflow:
+  ios-simulator:
     name: iOS Simulator Build
     environment:
       flutter: 3.24.0
       xcode: latest
       cocoapods: default
-      vars:
-        XCODE_WORKSPACE: "ios/Runner.xcworkspace"
-        XCODE_SCHEME: "Runner"
-        BUNDLE_ID: "com.example.myApp"
     scripts:
-      - name: Setup Flutter environment
+      - name: Setup and Build
         script: |
+          echo "=== SETUP START ==="
           flutter --version
           flutter clean
-          flutter packages pub get
-      - name: Install iOS dependencies
-        script: |
+          flutter pub get
+          
+          echo "=== iOS SETUP ==="
           cd ios
-          # Update iOS deployment target to 14.0 in all files
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' Runner.xcodeproj/project.pbxproj
           sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 13.0/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' Runner.xcodeproj/project.pbxproj
           sed -i '' 's/platform :ios, '\''12.0'\''/platform :ios, '\''14.0'\''/g' Podfile
           sed -i '' 's/platform :ios, '\''13.0'\''/platform :ios, '\''14.0'\''/g' Podfile
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''12.0'\''/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''14.0'\''/g' Podfile
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''13.0'\''/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''14.0'\''/g' Podfile
           sed -i '' 's/<string>12.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
           sed -i '' 's/<string>13.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
           pod install
-          echo "iOS dependencies installed successfully!"
-          echo "Verifying iOS configuration..."
-          cat Podfile | grep "platform :ios"
-          cat Flutter/AppFrameworkInfo.plist | grep "MinimumOSVersion"
-      - name: Flutter build ios simulator
-        script: |
-          # Force simulator build to avoid -G compiler option issues
-          echo "=== STARTING iOS SIMULATOR BUILD ==="
-          echo "Current directory: $(pwd)"
-          echo "Flutter version: $(flutter --version)"
-          echo "Available devices: $(flutter devices)"
-          echo "Building for iOS simulator..."
+          cd ..
+          
+          echo "=== SIMULATOR BUILD START ==="
           flutter build ios --debug --simulator --verbose
-          echo "=== iOS SIMULATOR BUILD COMPLETED ==="
-      - name: Verify build output
-        script: |
-          echo "Build completed successfully!"
+          echo "=== BUILD COMPLETE ==="
+          
+          echo "=== VERIFY OUTPUT ==="
           ls -la build/ios/iphonesimulator/
     artifacts:
       - build/ios/iphonesimulator/Runner.app
-      - /tmp/xcodebuild_logs/*.log
     publishing:
       email:
         recipients:
           - void7775@gmail.com
-      scripts:
-        - name: Upload to Codemagic Artifacts
-          script: |
-            echo "iOS build artifacts uploaded successfully!"
