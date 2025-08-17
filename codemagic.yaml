@@ -10,8 +10,10 @@ workflows:
         XCODE_SCHEME: "Runner"
         BUNDLE_ID: "com.example.myApp"
     scripts:
-      - name: Get Flutter packages
+      - name: Setup Flutter environment
         script: |
+          flutter --version
+          flutter clean
           flutter packages pub get
       - name: Install iOS dependencies
         script: |
@@ -26,10 +28,16 @@ workflows:
           sed -i '' 's/<string>12.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
           sed -i '' 's/<string>13.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
           pod install
-              - name: Flutter build ios
+          echo "iOS dependencies installed successfully!"
+          echo "Verifying iOS configuration..."
+          cat Podfile | grep "platform :ios"
+          cat Flutter/AppFrameworkInfo.plist | grep "MinimumOSVersion"
+              - name: Flutter build ios simulator
           script: |
-            # Use simulator build to avoid -G compiler option issues
+            # Force simulator build to avoid -G compiler option issues
+            echo "Starting iOS simulator build..."
             flutter build ios --debug --simulator --verbose
+            echo "Simulator build completed!"
               - name: Verify build output
           script: |
             echo "Build completed successfully!"
