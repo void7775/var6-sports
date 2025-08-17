@@ -1,0 +1,67 @@
+workflows:
+  ios-simulator:
+    name: iOS Simulator Build
+    environment:
+      flutter: 3.24.0
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Prepare Flutter
+        script: |
+          flutter --version
+          flutter doctor -v
+          flutter clean
+          rm -f pubspec.lock
+          flutter pub get
+      - name: Install CocoaPods
+        script: |
+          cd ios
+          pod repo update
+          pod install
+          cd ..
+      - name: Xcode diagnostics
+        script: |
+          xcodebuild -version
+          xcodebuild -showsdks
+          xcrun simctl list devices
+          xcodebuild -list -workspace ios/Runner.xcworkspace || true
+      - name: Select simulator destination
+        script: |
+          set -euo pipefail
+          pick_udid() {
+            xcrun simctl list devices available | awk -F'[()]' -v pat="$1" '$0 ~ pat {print $2; exit 0}'
+          }
+          UDID="$(pick_udid "iPhone 16 Pro ")"
+          if [[ -z "$UDID" ]]; then UDID="$(pick_udid "iPhone 16 Pro Max ")"; fi
+          if [[ -z "$UDID" ]]; then UDID="$(pick_udid "iPhone 16 ")"; fi
+          if [[ -z "$UDID" ]]; then UDID="$(pick_udid "iPhone SE \(3rd generation\)")"; fi
+          if [[ -z "$UDID" ]]; then
+            echo "No matching simulator found" >&2
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "Chosen UDID: $UDID" > sim_udid.txt
+      - name: Build with Xcode for Simulator
+        script: |
+          set -euo pipefail
+          mkdir -p build
+          UDID=$(cat sim_udid.txt)
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination "id=$UDID" \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build/xcodebuild.log
+      - name: List outputs
+        script: |
+          ls -la build || true
+          ls -la build/DerivedData/Build/Products || true
+          ls -la build/DerivedData/Build/Products/Debug-iphonesimulator || true
+    artifacts:
+      - build/DerivedData/Build/Products/Debug-iphonesimulator/Runner.app
+      - build/xcodebuild.log
+    publishing:
+      email:
+        recipients:
+          - void7775@gmail.com
