@@ -40,7 +40,9 @@ workflows:
             xcrun simctl list devices available
             exit 1
           fi
-          echo "Chosen UDID: $UDID" > sim_udid.txt
+          # Print for logs, store only raw UDID for build step
+          echo "Chosen UDID: $UDID"
+          echo "$UDID" > sim_udid.txt
       - name: Build with Xcode for Simulator
         script: |
           set -euo pipefail
