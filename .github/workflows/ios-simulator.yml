@@ -1,0 +1,47 @@
+name: iOS Simulator Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.24.0'
+        channel: 'stable'
+    
+    - name: Get dependencies
+      run: flutter pub get
+    
+    - name: Setup iOS
+      run: |
+        cd ios
+        sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' Runner.xcodeproj/project.pbxproj
+        sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 13.0/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' Runner.xcodeproj/project.pbxproj
+        sed -i '' 's/platform :ios, '\''12.0'\''/platform :ios, '\''14.0'\''/g' Podfile
+        sed -i '' 's/platform :ios, '\''13.0'\''/platform :ios, '\''14.0'\''/g' Podfile
+        sed -i '' 's/<string>12.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
+        sed -i '' 's/<string>13.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
+        pod install
+        cd ..
+    
+    - name: Build iOS Simulator
+      run: |
+        echo "=== STARTING iOS SIMULATOR BUILD ==="
+        flutter build ios --debug --simulator --verbose
+        echo "=== BUILD COMPLETE ==="
+    
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ios-simulator-app
+        path: build/ios/iphonesimulator/Runner.app
