@@ -22,7 +22,7 @@ jobs:
         run: |
           flutter --version
           flutter doctor -v
-          flutter precache --ios --simulator
+          flutter precache --ios
 
       - name: Install dependencies
         run: flutter pub get
