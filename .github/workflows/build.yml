@@ -76,6 +76,62 @@ jobs:
             -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build/xcodebuild.log
 
+  build-hello-ios-simulator:
+    name: Build Hello World (iOS Simulator)
+    runs-on: macos-14
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Flutter env
+        run: |
+          flutter --version
+          flutter doctor -v
+
+      - name: Create sample Flutter app
+        run: |
+          flutter create hello_app --platforms=ios -a swift
+
+      - name: Prepare CocoaPods and dependencies
+        run: |
+          set -euo pipefail
+          cd hello_app
+          flutter pub get
+          # Ensure iOS platform is compatible with Xcode 16 runner images
+          sed -i '' -e "s/^#\s*platform :ios.*/platform :ios, '14.0'/" ios/Podfile || true
+          cd ios
+          pod install --repo-update
+
+      - name: Xcode diagnostics
+        run: |
+          xcodebuild -version
+          xcrun simctl list runtimes
+          xcrun simctl list devices available | head -n 50
+
+      - name: Build sample app (Simulator)
+        run: |
+          set -euo pipefail
+          cd hello_app
+          mkdir -p build
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build/xcodebuild.log
+
+      - name: Upload sample app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-ios-simulator-app
+          path: hello_app/build/DerivedData/Build/Products/Debug-iphonesimulator/Runner.app
+
       - name: List build outputs
         if: always()
         run: |
