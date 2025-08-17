@@ -32,16 +32,16 @@ workflows:
           echo "Verifying iOS configuration..."
           cat Podfile | grep "platform :ios"
           cat Flutter/AppFrameworkInfo.plist | grep "MinimumOSVersion"
-              - name: Flutter build ios simulator
-          script: |
-            # Force simulator build to avoid -G compiler option issues
-            echo "Starting iOS simulator build..."
-            flutter build ios --debug --simulator --verbose
-            echo "Simulator build completed!"
-              - name: Verify build output
-          script: |
-            echo "Build completed successfully!"
-            ls -la build/ios/iphonesimulator/
+      - name: Flutter build ios simulator
+        script: |
+          # Force simulator build to avoid -G compiler option issues
+          echo "Starting iOS simulator build..."
+          flutter build ios --debug --simulator --verbose
+          echo "Simulator build completed!"
+      - name: Verify build output
+        script: |
+          echo "Build completed successfully!"
+          ls -la build/ios/iphonesimulator/
     artifacts:
       - build/ios/iphonesimulator/Runner.app
       - /tmp/xcodebuild_logs/*.log
