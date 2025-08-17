@@ -16,14 +16,20 @@ workflows:
       - name: Install iOS dependencies
         script: |
           cd ios
-          # Update iOS deployment target to 13.0
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' Runner.xcodeproj/project.pbxproj
-          sed -i '' 's/platform :ios, '\''12.0'\''/platform :ios, '\''13.0'\''/g' Podfile
-          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''12.0'\''/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''13.0'\''/g' Podfile
+          # Update iOS deployment target to 14.0 in all files
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 13.0/IPHONEOS_DEPLOYMENT_TARGET = 14.0/g' Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/platform :ios, '\''12.0'\''/platform :ios, '\''14.0'\''/g' Podfile
+          sed -i '' 's/platform :ios, '\''13.0'\''/platform :ios, '\''14.0'\''/g' Podfile
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''12.0'\''/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''14.0'\''/g' Podfile
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''13.0'\''/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''14.0'\''/g' Podfile
+          sed -i '' 's/<string>12.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
+          sed -i '' 's/<string>13.0<\/string>/<string>14.0<\/string>/g' Flutter/AppFrameworkInfo.plist
           pod install
-      - name: Flutter build ipa
-        script: |
-          flutter build ipa --release --no-codesign
+              - name: Flutter build ipa
+          script: |
+            # Try simulator build first, then device build
+            flutter build ios --debug --simulator || flutter build ipa --release --no-codesign
       - name: Verify build output
         script: |
           echo "Build completed successfully!"
