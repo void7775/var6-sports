@@ -1,0 +1,80 @@
+name: Ultra Basic iOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        flutter-version: '3.22.0'  # Try older stable version
+        
+    - name: Flutter doctor
+      run: flutter doctor
+      
+    - name: Remove problematic dependencies
+      run: |
+        # Create minimal pubspec.yaml
+        cat > pubspec.yaml << 'EOF'
+        name: my_app
+        description: A minimal Flutter project.
+        publish_to: 'none'
+        version: 1.0.0+1
+        
+        environment:
+          sdk: ^3.8.1
+        
+        dependencies:
+          flutter:
+            sdk: flutter
+          cupertino_icons: ^1.0.8
+        
+        dev_dependencies:
+          flutter_test:
+            sdk: flutter
+          flutter_lints: ^5.0.0
+        
+        flutter:
+          uses-material-design: true
+        EOF
+        
+    - name: Create ultra simple main.dart
+      run: |
+        cat > lib/main.dart << 'EOF'
+        import 'package:flutter/material.dart';
+        
+        void main() {
+          runApp(MyApp());
+        }
+        
+        class MyApp extends StatelessWidget {
+          @override
+          Widget build(BuildContext context) {
+            return MaterialApp(
+              title: 'Test App',
+              home: Scaffold(
+                appBar: AppBar(title: Text('Test')),
+                body: Center(child: Text('Hello iOS!')),
+              ),
+            );
+          }
+        }
+        EOF
+        
+    - name: Clean and get dependencies
+      run: |
+        flutter clean
+        flutter pub get
+        
+    - name: Try iOS build
+      run: flutter build ios --debug --no-codesign
+      
+    - name: Success!
+      run: echo "BUILD SUCCEEDED!"
