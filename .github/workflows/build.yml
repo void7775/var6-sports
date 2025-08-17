@@ -38,6 +38,7 @@ jobs:
           xcodebuild -version
           xcodebuild -showsdks
           xcrun simctl list devices
+          xcodebuild -list -workspace ios/Runner.xcworkspace || true
 
       - name: Build with Xcode for Simulator (generic destination)
         run: |
@@ -48,14 +49,26 @@ jobs:
             -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/DerivedData \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build/xcodebuild.log
 
       - name: List build outputs
+        if: always()
         run: |
-          ls -la build/DerivedData/Build/Products
+          ls -la build || true
+          ls -la build/DerivedData/Build/Products || true
           ls -la build/DerivedData/Build/Products/Debug-iphonesimulator || true
 
-      - name: Upload build artifacts
+      - name: Upload Xcode logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: xcode-logs
+          path: |
+            build/xcodebuild.log
+            build/DerivedData/Logs/Build/**
+
+      - name: Upload app artifact
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: ios-simulator-app
