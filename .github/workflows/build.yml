@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - name: Checkout repository
@@ -18,6 +18,15 @@ jobs:
           flutter-version: '3.24.0'
           channel: 'stable'
 
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
       - name: Flutter env
         run: |
           flutter --version
@@ -27,11 +36,18 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
       
+      - name: Cache Pods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('ios/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       - name: Install CocoaPods
         run: |
           cd ios
-          pod repo update
-          pod install
+          pod install --repo-update
 
       - name: Xcode diagnostics
         run: |
@@ -40,25 +56,13 @@ jobs:
           xcrun simctl list devices
           xcodebuild -list -workspace ios/Runner.xcworkspace || true
 
-      - name: Select simulator destination
-        id: select_sim
-        run: |
-          set -euo pipefail
-          # Try preferred devices in order and pick first available UDID
-          pick_udid() {
-            xcrun simctl list devices available | awk -F'[()]' -v pat="$1" '$0 ~ pat {print $2; exit 0}'
-          }
-          UDID="$(pick_udid "iPhone 16 Pro ")"
-          if [[ -z "$UDID" ]]; then UDID="$(pick_udid "iPhone 16 Pro Max ")"; fi
-          if [[ -z "$UDID" ]]; then UDID="$(pick_udid "iPhone 16 ")"; fi
-          if [[ -z "$UDID" ]]; then UDID="$(pick_udid "iPhone SE \(3rd generation\)")"; fi
-          if [[ -z "$UDID" ]]; then
-            echo "No matching simulator found" >&2
-            xcrun simctl list devices available
-            exit 1
-          fi
-          echo "Chosen UDID: $UDID"
-          echo "udid=$UDID" >> $GITHUB_OUTPUT
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: build/DerivedData
+          key: ${{ runner.os }}-dd-${{ hashFiles('ios/Podfile.lock', 'pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-dd-
 
       - name: Build with Xcode for Simulator (specific device)
         run: |
@@ -68,7 +72,7 @@ jobs:
             -scheme Runner \
             -configuration Debug \
             -sdk iphonesimulator \
-            -destination "id=${{ steps.select_sim.outputs.udid }}" \
+            -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build/DerivedData \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO build | tee build/xcodebuild.log
 
