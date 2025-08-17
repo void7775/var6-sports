@@ -5,7 +5,7 @@ A Flutter sports application with Firebase backend featuring:
 - 🏆 Sports fixtures and results
 - 🔥 Firebase authentication and data storage  
 - 📱 Multi-platform support (iOS, Android, Web)
-- ⚙️ Automated CI/CD with GitHub Actions
+- ⚙️ Automated CI/CD with Codemagic
 - 🎨 Modern UI with dark/light theme support
 
 ## Features
@@ -18,8 +18,8 @@ A Flutter sports application with Firebase backend featuring:
 
 ## Automated Builds
 
-This project uses GitHub Actions to automatically build:
-- 📱 **iOS apps** (using macOS runners)
+This project uses Codemagic to automatically build:
+- 📱 **iOS apps** (simulator builds for development)
 - 🤖 **Android APK/AAB files** 
 - 🌐 **Web applications**
 
