@@ -16,6 +16,10 @@ workflows:
       - name: Install iOS dependencies
         script: |
           cd ios
+          # Update iOS deployment target to 13.0
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET = 12.0/IPHONEOS_DEPLOYMENT_TARGET = 13.0/g' Runner.xcodeproj/project.pbxproj
+          sed -i '' 's/platform :ios, '\''12.0'\''/platform :ios, '\''13.0'\''/g' Podfile
+          sed -i '' 's/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''12.0'\''/IPHONEOS_DEPLOYMENT_TARGET'\''\] = '\''13.0'\''/g' Podfile
           pod install
       - name: Flutter build ipa
         script: |
