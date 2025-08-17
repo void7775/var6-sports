@@ -1,0 +1,101 @@
+name: iOS Build (Flutter)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - ".github/workflows/ios_build.yml"
+      - "pubspec.yaml"
+      - "ios/**"
+      - "lib/**"
+  pull_request:
+    paths:
+      - ".github/workflows/ios_build.yml"
+      - "pubspec.yaml"
+      - "ios/**"
+      - "lib/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-ios:
+    name: Build iOS (no-codesign)
+    runs-on: macos-14
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Flutter version
+        run: flutter --version
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+          key: ${{ runner.os }}-pub-${{ hashFiles('pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install CocoaPods 1.15.2 (Xcode 16 compatible)
+        run: |
+          sudo gem install -n /usr/local/bin cocoapods -v 1.15.2
+          pod --version
+
+      - name: Flutter pub get
+        run: flutter pub get
+
+      - name: Pod install
+        working-directory: ios
+        run: |
+          pod repo update
+          pod install --repo-update
+
+      - name: Verify no unsupported -G flags in pods
+        working-directory: ios
+        run: |
+          if grep -R " -G" -n Pods | cat; then
+            echo "Found unsupported -G flags in pod build settings" >&2
+            exit 1
+          else
+            echo "No unsupported -G flags found"
+          fi
+
+      - name: Build iOS (release, no codesign)
+        run: |
+          flutter clean
+          flutter build ios --release --no-codesign
+
+      - name: Prepare artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          APP_PATH="build/ios/iphoneos/Runner.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "Runner.app not found at $APP_PATH" >&2
+            ls -R build/ios | cat || true
+            exit 1
+          fi
+          ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" Runner.app.zip
+          cp ios/Podfile.lock Podfile.lock || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-Runner.app
+          path: |
+            Runner.app.zip
+            ios/Podfile.lock
+            ios/Pods/Manifest.lock
+            ios/Runner.xcworkspace/contents.xcworkspacedata
+
